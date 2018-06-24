@@ -6,6 +6,8 @@ import Cockpit from '../components/Cockpit/Cockpit';
 import Aux from '../hoc/Aux';
 import withClass from '../hoc/withClass'
 
+export const AuthContext = React.createContext(false);
+
 class App extends PureComponent {
   constructor( props ) {
     super( props );
@@ -18,11 +20,13 @@ class App extends PureComponent {
       ],
       otherState: 'some other value',
       showPersons: false,
-      toggleClicked: 0
+      toggleClicked: 0,
+      authenticated: false
     };
   }
 
   componentWillMount () {
+    // discouraged to be used cause of a frequent bad usage
     console.log( '[App.js] Inside componentWillMount()' );
   }
 
@@ -37,7 +41,28 @@ class App extends PureComponent {
   // }
 
   componentWillUpdate ( nextProps, nextState ) {
+    // discouraged to be used, as ComponentWillReceiveProps, cause of a frequent bad usage
     console.log( '[UPDATE App.js] Inside componentWillUpdate', nextProps, nextState );
+  }
+
+  static getDerivedStateFromProps(nextProps, prevState) {
+    // executed whenever props are updated
+    // executed before rendering and componentDidMount
+    console.log(
+      "[UPDATE App.js] Inside getDerivedStateFromProps",
+      nextProps,
+      prevState
+    );
+
+    return prevState;
+  }
+
+  getSnapshotBeforeUpdate() {
+    // allows to get a snapshot of the DOM right before it's about to change
+    // executed right before componentDidUpdate
+    console.log(
+      "[UPDATE App.js] Inside getSnapshotBeforeUpdate"
+    );
   }
 
   componentDidUpdate () {
@@ -87,6 +112,10 @@ class App extends PureComponent {
     } );
   }
 
+  loginHandler = () => {
+    this.setState({ authenticated: true });
+  }
+
   render () {
     console.log( '[App.js] Inside render()' );
     let persons = null;
@@ -105,8 +134,11 @@ class App extends PureComponent {
           appTitle={this.props.title}
           showPersons={this.state.showPersons}
           persons={this.state.persons}
+          login={this.loginHandler}
           clicked={this.togglePersonsHandler} />
-        {persons}
+          <AuthContext.Provider value={this.state.authenticated}>
+            {persons}
+          </AuthContext.Provider>
       </Aux>
     );
   }
